@@ -17,10 +17,10 @@ class LocationState {
   final Position? position;
   String get message => switch (status) {
     LocationStatus.idle =>
-      'Your location stays on this device in this preview.',
+      'Get a location fix here. Activating a signal shares one waiting location.',
     LocationStatus.loading => 'Finding your current location…',
     LocationStatus.ready =>
-      'Current location available. Nothing is being shared.',
+      'Location fix available. Activating a signal always requests a fresh fix.',
     LocationStatus.servicesDisabled =>
       'Location services are off. Enable GPS in settings.',
     LocationStatus.denied => 'Location permission denied. You can try again.',
@@ -32,6 +32,36 @@ class LocationState {
 }
 
 class LocationService {
+  Future<Position> freshPosition() async {
+    if (!await servicesEnabled()) {
+      throw const LocationFailure(
+        'Location services are off. Enable GPS in device settings.',
+      );
+    }
+    var permission = await checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      throw const LocationFailure(
+        'Location access is blocked. Allow it in app settings, then try again.',
+      );
+    }
+    if (permission != LocationPermission.whileInUse &&
+        permission != LocationPermission.always) {
+      throw const LocationFailure(
+        'Location permission is required to signal a taxi. Tap again to allow it.',
+      );
+    }
+    try {
+      return await currentPosition();
+    } catch (_) {
+      throw const LocationFailure(
+        'Could not get a fresh GPS fix. Check your location settings and try again.',
+      );
+    }
+  }
+
   Future<bool> servicesEnabled() => Geolocator.isLocationServiceEnabled();
   Future<LocationPermission> checkPermission() => Geolocator.checkPermission();
   Future<LocationPermission> requestPermission() =>
@@ -44,6 +74,13 @@ class LocationService {
   );
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
   Future<bool> openLocationSettings() => Geolocator.openLocationSettings();
+}
+
+class LocationFailure implements Exception {
+  const LocationFailure(this.message);
+  final String message;
+  @override
+  String toString() => message;
 }
 
 final locationServiceProvider = Provider((ref) => LocationService());

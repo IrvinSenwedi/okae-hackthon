@@ -26,7 +26,7 @@ void main() {
           .onPressed,
       isNull,
     );
-    expect(find.text('PREVIEW • NO SIGNAL IS ACTIVE'), findsOneWidget);
+    expect(find.text('CHECK SIGNAL STATUS'), findsOneWidget);
   });
   testWidgets('driver stays offline with missing map config and no signals', (
     tester,

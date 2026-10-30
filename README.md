@@ -1,7 +1,11 @@
-# OKAE — Batch 1
+# OKAE — Passenger signalling (Batch 2)
 
 A Flutter foundation for South African minibus taxi passenger visibility.
-This is a preview: signalling and driver availability are disabled. There are no bookings, fabricated passengers, authentication screens, broadcasts, database writes or background tracking.
+Batch 2 implements anonymous passenger authentication, fresh GPS activation, server-defined five-minute signals, cancellation and restoration. Driver availability and discovery remain disabled. There are no bookings, fabricated passengers, registration screens or background tracking.
+
+**Before live signalling:** enable anonymous sign-ins in Supabase and deploy [the migration](supabase/migrations/202610300001_passenger_signals.sql). Anonymous sign-ins were disabled in the supplied project when checked on 30 October 2026. No hosted database changes have been applied.
+
+See [Batch 2 setup, security and validation](docs/BATCH_2.md) for the full implementation and deployment instructions. The public configuration is stored only in ignored `config.local.json`; run `flutter run --dart-define-from-file=config.local.json`.
 
 ## Structure and changes
 
@@ -11,7 +15,7 @@ This is a preview: signalling and driver availability are disabled. There are no
 - `lib/core/location/`: injectable Geolocator service and auto-disposed Riverpod controller. Handles disabled GPS, denied/blocked permissions, errors and explicit refresh.
 - `lib/core/services/`: Supabase setup and read-only health check. Missing configuration, invalid configuration, initialization failure and connection failure are distinct states. SDK initialization alone does not prove connectivity.
 - `lib/features/onboarding/`: welcome and local mode navigation.
-- `lib/features/passenger/`: location feedback, disabled SIGNAL TAXI control and explanation.
+- `lib/features/passenger/`: signal model/service, persistent request intent, Riverpod lifecycle controller and passenger UI.
 - `lib/features/driver/`: disabled availability, Mapbox map, actual GPS marker and honest empty state.
 - `lib/shared/widgets/`: shared status, layout and location widgets.
 - `test/`: navigation, preview controls, small-screen layout, configuration and location service tests.
@@ -53,7 +57,9 @@ Official references:
 Supply `SUPABASE_URL` (HTTPS project URL) and `SUPABASE_PUBLISHABLE_KEY` (public client key).
 Never supply a service-role or secret key.
 Missing configuration does not stop local preview navigation.
-No hosted changes, tables, RLS policies, records or migrations are created in Batch 1.
+Deploy `supabase/migrations/202610300001_passenger_signals.sql` through authenticated Supabase CLI migration tooling or the project's SQL Editor. Enable anonymous sign-ins under Authentication → Sign In / Providers. These require project administration; the publishable key cannot perform them.
+
+The migration enables RLS, grants only own/unexpired SELECT access, and restricts mutation to authenticated RPCs. No raw table writes or Realtime publication are enabled. Supabase Flutter persists sessions using its default local storage, with automatic token refreshing enabled. See [security and test details](docs/BATCH_2.md).
 
 `initializeBackend` reports SDK setup separately from network health.
 `checkBackendConnection` / `connectionProvider` can check GET /auth/v1/health without touching signal tables.
@@ -81,7 +87,7 @@ Alternatively create ignored `config.local.json` containing those three keys, th
 Dart defines are compiled into the app, so only public client configuration belongs here.
 Restart/rebuild after changing defines.
 
-## Verification (30 October 2026)
+## Batch 1 verification history (30 October 2026)
 
 - `flutter pub get`: succeeded through dependency installation.
 - Initial `flutter test`: **10 tests passed**, including navigation, preview safeguards, 320 px layout and mocked permission/GPS refresh cases.
@@ -107,5 +113,9 @@ Device checks: deny/allow/block permission; disable/enable GPS; refresh at two a
 
 ## Next batches
 
-Batch 2: design protected authentication/authorization and RLS before creating coordinate records; implement signal creation, five-minute expiry and cancellation, then real driver availability. Keep current controls disabled until those paths are complete.
+Batch 2 client implementation and versioned database migration are present. Deploy the migration and enable anonymous authentication before live acceptance testing. Driver availability remains disabled.
 Actual 500-metre discovery/filtering remains Batch 3. No acceptance, destinations, seats, payments, chat or taxi route calculations are included.
+
+## Follow-up verification
+
+The supplied Mapbox public token is stored only in ignored config.local.json. A later Android debug build succeeded, installed and launched on emulator-5554 using that configuration. All 10 tests passed again. Native map rendering after granting GPS permission has not yet been verified; the earlier disk-space build blocker was resolved before this successful run.

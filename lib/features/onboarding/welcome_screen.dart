@@ -30,7 +30,7 @@ class WelcomeScreen extends StatelessWidget {
                         letterSpacing: 4,
                       ),
                     ),
-                    Tag('BATCH 01 / PREVIEW'),
+                    Tag('BATCH 02 / PASSENGER'),
                   ],
                 ),
                 const SizedBox(height: 44),

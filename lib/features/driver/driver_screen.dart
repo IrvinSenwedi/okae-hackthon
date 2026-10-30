@@ -30,7 +30,7 @@ class DriverScreen extends StatelessWidget {
                     'Offline',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  Text('Availability opens in Batch 2'),
+                  Text('Availability opens in Batch 3'),
                 ],
               ),
             ),

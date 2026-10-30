@@ -21,7 +21,7 @@ Future<BackendStatus> initializeBackend(AppConfig config) async {
       url: config.supabaseUrl,
       publishableKey: config.supabaseKey,
       authOptions: const FlutterAuthClientOptions(
-        autoRefreshToken: false,
+        autoRefreshToken: true,
         detectSessionInUri: false,
       ),
     );
